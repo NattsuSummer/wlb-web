@@ -9,6 +9,7 @@ import type { Key } from '../i18n';
 import type { Issue, Pack, Validation } from '../lib/courses';
 import { useLoad } from '../lib/use-load';
 import { Link, navigate } from '../router';
+import { McpSetup } from './oauth';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Doc = Record<string, any>;
@@ -101,7 +102,7 @@ export function ImportPage() {
               <p className="muted" style={{ fontSize: 13 }}>{t('e.guideLink')}<br /><a href={guideUrl} target="_blank" rel="noopener noreferrer" style={{ overflowWrap: 'anywhere' }}>{guideUrl}</a></p>
             </>
           )}
-          {tab === 'mcp' && <p className="note info">{t('e.mcpSoon')}</p>}
+          {tab === 'mcp' && <McpSetup />}
           {tab === 'token' && (
             <>
               <p className="ink2" style={{ fontSize: 14 }}>{t('e.tokenHelp', { url: `${API_URL}/api/import/course` })}</p>
