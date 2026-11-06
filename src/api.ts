@@ -21,6 +21,7 @@ export interface MemberCard {
   user: User; isMe: boolean; privateMode: boolean;
   visible: { schedule: Level; now: Level; summary: Level; courses: Level };
   now: NowInfo | null; summary: Summary | null;
+  courses: { id: number; title: string; categoryId: number | null; done: number; total: number; percent: number; state: string; lastAt: string }[] | null;
 }
 export interface ScheduleView {
   user: User; editable: boolean;

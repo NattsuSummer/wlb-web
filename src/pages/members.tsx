@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { get, type MemberCard } from '../api';
 import { useApp } from '../app-context';
+import { Progress } from '../components/course-ui';
 import { Avatar, ErrorNote, Icon, Spinner, useCat } from '../components/ui';
 import { hh } from '../lib/schedule';
 import { useLoad } from '../lib/use-load';
@@ -76,6 +77,18 @@ function Member({ m }: { m: MemberCard }) {
               </div>
             </div>
           ) : <Hidden label={t('members.week')} />}
+
+          {m.courses && m.courses.length > 0 && (
+            <div className="stack" style={{ gap: 6 }}>
+              <span className="ink2" style={{ fontSize: 12, fontWeight: 500 }}>{t('members.learning')}</span>
+              {m.courses.slice(0, 3).map((c) => (
+                <Link key={c.id} href={`/courses/${c.id}`} className="stack" style={{ gap: 4, textDecoration: 'none', color: 'var(--ink)' }}>
+                  <span className="between" style={{ fontSize: 14 }}><span style={{ overflowWrap: 'anywhere' }}>{c.title}</span><span className="mono muted" style={{ fontSize: 12 }}>{c.done}/{c.total}</span></span>
+                  <Progress percent={c.percent} />
+                </Link>
+              ))}
+            </div>
+          )}
 
           {m.visible.schedule !== 'hide' && (
             <Link href={m.isMe ? '/schedule' : `/schedule/${m.user.username}`} className="btn" style={{ alignSelf: 'flex-start' }}>

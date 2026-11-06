@@ -1,24 +1,19 @@
+import type { ReactElement } from 'react';
 import { createRoot } from 'react-dom/client';
 import { AppProvider, useApp } from './app-context';
 import { Layout } from './components/layout';
 import { Spinner } from './components/ui';
 import { AdminPage } from './pages/admin';
+import { CoursePage } from './pages/course';
+import { EditCoursePage, ImportPage, NewCoursePage } from './pages/course-editor';
+import { CoursesPage } from './pages/courses';
+import { LessonPage } from './pages/lesson';
 import { HomePage } from './pages/home';
 import { ForcePasswordPage, LoginPage } from './pages/login';
 import { MembersPage } from './pages/members';
 import { SchedulePage } from './pages/schedule';
 import { SettingsPage } from './pages/settings';
 import { usePath } from './router';
-
-function CoursesSoon() {
-  const { t } = useApp();
-  return (
-    <div className="card stack" style={{ alignItems: 'flex-start' }}>
-      <h1>{t('courses.soonTitle')}</h1>
-      <p className="muted">{t('courses.soonSub')}</p>
-    </div>
-  );
-}
 
 function App() {
   const { ready, me } = useApp();
@@ -27,17 +22,25 @@ function App() {
   if (!me) return <LoginPage />;
   if (me.mustChangePassword) return <ForcePasswordPage />;
 
-  const [, section, arg] = path.split('/');
-  let page;
+  const [, section, arg, sub] = path.split('/');
+  const num = Number(arg);
+  let page: ReactElement | undefined;
   switch (section) {
     case '': case undefined: page = <HomePage />; break;
     case 'schedule': page = <SchedulePage key={arg ?? 'me'} username={arg ? decodeURIComponent(arg) : undefined} />; break;
     case 'members': page = <MembersPage />; break;
-    case 'courses': page = <CoursesSoon />; break;
+    case 'courses':
+      if (!arg) page = <CoursesPage />;
+      else if (arg === 'new') page = <NewCoursePage />;
+      else if (arg === 'import') page = <ImportPage />;
+      else if (Number.isInteger(num) && sub === 'edit') page = <EditCoursePage key={num} id={num} />;
+      else if (Number.isInteger(num) && !sub) page = <CoursePage key={num} id={num} />;
+      break;
+    case 'lessons': if (Number.isInteger(num)) page = <LessonPage id={num} />; break;
     case 'settings': page = <SettingsPage />; break;
     case 'admin': page = <AdminPage />; break;
-    default: page = <div className="empty-state">404</div>;
   }
+  page ??= <div className="empty-state">404</div>;
   return <Layout path={path}>{page}</Layout>;
 }
 
