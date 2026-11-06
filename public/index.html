@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Balance Our Day</title>
+  <meta name="description" content="ตารางชีวิตประจำวัน สัดส่วนเวลา และคอร์สที่เรียนด้วยกันในกลุ่ม">
+  <meta name="theme-color" content="#0F1513">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+  <link rel="stylesheet" href="/styles.css?v=__V__">
+  <script>
+    // apply saved theme before paint (avoids a white flash)
+    try {
+      var t = localStorage.getItem('wlb.theme') || 'dark';
+      if (t === 'system') t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      document.documentElement.dataset.theme = t;
+    } catch (e) { document.documentElement.dataset.theme = 'dark'; }
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+  <noscript>เว็บนี้ต้องเปิด JavaScript</noscript>
+  <script type="module" src="/assets/app.js?v=__V__"></script>
+</body>
+</html>
