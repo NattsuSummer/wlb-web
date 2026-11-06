@@ -4,8 +4,12 @@ import { useApp } from '../app-context';
 import { Avatar, ErrorNote, Spinner } from '../components/ui';
 import { catColors } from '../lib/colors';
 import { useLoad } from '../lib/use-load';
+import { CatBox, resetCourseCats } from '../components/course-ui';
+import { TINT_KEYS, tintHex, type CourseCard, type CourseCategory } from '../lib/courses';
+import { Link } from '../router';
+import { downloadJson } from './course';
 
-type Tab = 'users' | 'cats' | 'tokens';
+type Tab = 'users' | 'cats' | 'ccats' | 'courses' | 'tokens';
 
 export function AdminPage() {
   const { t, me } = useApp();
@@ -15,12 +19,14 @@ export function AdminPage() {
     <>
       <div className="stack" style={{ gap: 4 }}><h1>{t('admin.title')}</h1><p className="muted" style={{ fontSize: 14 }}>{t('admin.sub')}</p></div>
       <div className="tabs" role="tablist">
-        {([['users', t('admin.users')], ['cats', t('admin.timeCats')], ['tokens', t('admin.tokens')]] as [Tab, string][]).map(([k, label]) => (
+        {([['users', t('admin.users')], ['cats', t('admin.timeCats')], ['ccats', t('admin.courseCats')], ['courses', t('admin.allCourses')], ['tokens', t('admin.tokens')]] as [Tab, string][]).map(([k, label]) => (
           <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)}>{label}</button>
         ))}
       </div>
       {tab === 'users' && <Users />}
       {tab === 'cats' && <Categories />}
+      {tab === 'ccats' && <CourseCategories />}
+      {tab === 'courses' && <AllCourses />}
       {tab === 'tokens' && <AllTokens />}
     </>
   );
@@ -151,5 +157,127 @@ function AllTokens() {
         </tr>
       ))}</tbody>
     </table></div>
+  );
+}
+
+const ICON_CHOICES = ['speech', 'music', 'brush', 'code', 'sigma', 'flask', 'heart', 'chef', 'coin', 'chart', 'camera', 'gamepad', 'sprout', 'book'];
+
+function CourseCategories() {
+  const { t, toast } = useApp();
+  const list = useLoad(() => get<{ categories: CourseCategory[] }>('/api/course-categories'), []);
+  const [form, setForm] = useState({ nameTh: '', nameEn: '', icon: 'book', tint: 'r' });
+  const done = () => { resetCourseCats(); list.reload(); };
+
+  async function create() {
+    try { await post('/api/course-categories', { ...form, nameEn: form.nameEn || form.nameTh }); setForm({ nameTh: '', nameEn: '', icon: 'book', tint: 'r' }); done(); toast(t('common.saved')); }
+    catch (e) { toast(errMsg(e, t('common.error'))); }
+  }
+  async function update(c: CourseCategory, body: Partial<CourseCategory>) {
+    try { await patch(`/api/course-categories/${c.id}`, body); done(); } catch (e) { toast(errMsg(e, t('common.error'))); list.reload(); }
+  }
+  async function remove(c: CourseCategory) {
+    try { await del(`/api/course-categories/${c.id}`); done(); toast(t('common.saved')); }
+    catch (e) { toast(e instanceof ApiError && e.code === 'category_in_use' ? t('admin.courseCatInUse') : errMsg(e, t('common.error'))); }
+  }
+
+  if (list.error) return <ErrorNote error={list.error} onRetry={list.reload} />;
+  if (!list.data) return <Spinner />;
+  const TintPick = ({ value, onPick }: { value: string; onPick: (v: string) => void }) => (
+    <div className="hstack" role="radiogroup" aria-label={t('admin.color')} style={{ gap: 4 }}>
+      {TINT_KEYS.map((k) => (
+        <button key={k} type="button" role="radio" aria-checked={value === k} aria-label={k} onClick={() => onPick(k)}
+          style={{ width: 28, height: 28, borderRadius: 8, cursor: 'pointer', background: catColors(tintHex(k)).solid, border: value === k ? '3px solid var(--ink)' : '1px solid var(--line)' }} />
+      ))}
+    </div>
+  );
+  return (
+    <section className="stack">
+      <div className="table-wrap">
+        <table>
+          <thead><tr><th>{t('admin.icon')}</th><th>{t('admin.nameTh')}</th><th>{t('admin.nameEn')}</th><th>{t('admin.color')}</th><th /></tr></thead>
+          <tbody>
+            {list.data.categories.map((c) => (
+              <tr key={c.id}>
+                <td>
+                  <span className="hstack" style={{ flexWrap: 'nowrap' }}>
+                    <CatBox cat={c} size={34} />
+                    <select className="input" aria-label={t('admin.icon')} value={c.icon} onChange={(e) => update(c, { icon: e.target.value })} style={{ width: 120 }}>
+                      {ICON_CHOICES.map((i) => <option key={i} value={i}>{i}</option>)}
+                    </select>
+                  </span>
+                </td>
+                <td><input className="input" aria-label={t('admin.nameTh')} defaultValue={c.nameTh} onBlur={(e) => e.target.value.trim() && e.target.value !== c.nameTh && update(c, { nameTh: e.target.value.trim() })} /></td>
+                <td><input className="input" aria-label={t('admin.nameEn')} defaultValue={c.nameEn} onBlur={(e) => e.target.value.trim() && e.target.value !== c.nameEn && update(c, { nameEn: e.target.value.trim() })} /></td>
+                <td><TintPick value={c.tint} onPick={(v) => update(c, { tint: v })} /></td>
+                <td><button type="button" className="btn small danger-ghost" onClick={() => remove(c)}>{t('common.delete')}</button></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="card stack">
+        <h2>{t('admin.addCourseCat')}</h2>
+        <div className="grid2">
+          <label className="field">{t('admin.nameTh')}<input className="input" value={form.nameTh} onChange={(e) => setForm({ ...form, nameTh: e.target.value })} /></label>
+          <label className="field">{t('admin.nameEn')}<input className="input" value={form.nameEn} onChange={(e) => setForm({ ...form, nameEn: e.target.value })} /></label>
+          <label className="field">{t('admin.icon')}
+            <select className="input" value={form.icon} onChange={(e) => setForm({ ...form, icon: e.target.value })}>{ICON_CHOICES.map((i) => <option key={i} value={i}>{i}</option>)}</select>
+          </label>
+          <div className="field">{t('admin.color')}<TintPick value={form.tint} onPick={(v) => setForm({ ...form, tint: v })} /></div>
+        </div>
+        <div><button type="button" className="btn primary" disabled={!form.nameTh.trim()} onClick={create}>{t('common.save')}</button></div>
+      </div>
+    </section>
+  );
+}
+
+function AllCourses() {
+  const { t, toast } = useApp();
+  const list = useLoad(() => get<{ courses: CourseCard[] }>('/api/admin/courses'), []);
+  async function change(c: CourseCard, body: Record<string, unknown>) {
+    try { await patch(`/api/courses/${c.id}`, body); list.reload(); } catch (e) { toast(errMsg(e, t('common.error'))); }
+  }
+  async function remove(c: CourseCard) {
+    if (!window.confirm(t('c.confirmDelete', { title: c.title }))) return;
+    try { await del(`/api/courses/${c.id}`); list.reload(); toast(t('c.deleted')); } catch (e) { toast(errMsg(e, t('common.error'))); }
+  }
+  async function exportJson(c: CourseCard) {
+    try { downloadJson(c.title, await get(`/api/courses/${c.id}/export`)); } catch (e) { toast(errMsg(e, t('common.error'))); }
+  }
+  if (list.error) return <ErrorNote error={list.error} onRetry={list.reload} />;
+  if (!list.data) return <Spinner />;
+  if (!list.data.courses.length) return <div className="empty-state">{t('c.emptyAll')}</div>;
+  return (
+    <div className="table-wrap">
+      <table>
+        <thead><tr><th>{t('admin.colCourse')}</th><th>{t('admin.colBy')}</th><th>{t('admin.colVis')}</th><th>{t('admin.colStatus')}</th><th className="num">{t('c.lessonsH')}</th><th>{t('admin.manage')}</th></tr></thead>
+        <tbody>
+          {list.data.courses.map((c) => (
+            <tr key={c.id}>
+              <td><Link href={`/courses/${c.id}`}>{c.title}</Link></td>
+              <td>{c.creatorName ?? '—'}</td>
+              <td>
+                <select className="input" aria-label={`${t('admin.colVis')}: ${c.title}`} value={c.visibility} onChange={(e) => change(c, { visibility: e.target.value })} style={{ minWidth: 150 }}>
+                  <option value="group">{t('f.vis.group')}</option><option value="private">{t('f.vis.private')}</option>
+                </select>
+              </td>
+              <td>
+                <select className="input" aria-label={`${t('admin.colStatus')}: ${c.title}`} value={c.status} onChange={(e) => change(c, { status: e.target.value })} style={{ minWidth: 120 }}>
+                  <option value="published">{t('admin.published')}</option><option value="draft">{t('c.draft')}</option>
+                </select>
+              </td>
+              <td className="num">{c.lessonCount}</td>
+              <td>
+                <span className="hstack" style={{ flexWrap: 'nowrap' }}>
+                  <Link className="btn small" href={`/courses/${c.id}/edit`}>{t('common.edit')}</Link>
+                  <button type="button" className="btn small" onClick={() => exportJson(c)}>JSON</button>
+                  <button type="button" className="btn small danger-ghost" onClick={() => remove(c)}>{t('common.delete')}</button>
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }

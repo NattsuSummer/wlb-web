@@ -11,6 +11,8 @@
     "deploy": "wrangler pages deploy dist --project-name balance-our-day"
   },
   "dependencies": {
+    "dompurify": "^3.4.17",
+    "marked": "^15.0.12",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },

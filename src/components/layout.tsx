@@ -32,7 +32,8 @@ const NAV = [
 
 export function Layout({ path, children }: { path: string; children: ReactNode }) {
   const { me, t } = useApp();
-  const section = '/' + (path.split('/')[1] ?? '');
+  const first = path.split('/')[1] ?? '';
+  const section = '/' + (first === 'lessons' ? 'courses' : first);
   const current = (href: string) => (href === section ? 'page' : undefined);
   return (
     <>

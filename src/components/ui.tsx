@@ -19,7 +19,30 @@ const P: Record<string, string> = {
   lock: 'M8 11V8a4 4 0 0 1 8 0v3',
   check: 'M5 12l5 5L20 7',
   plus: 'M12 5v14M5 12h14',
+  // course category icons
+  speech: 'M4 5h16v10H9l-5 4z',
+  music: 'M9 18V5l11-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM20 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z',
+  brush: 'M4 20l4-1L19 8l-3-3L5 16zM14 7l3 3',
+  code: 'M8 8l-4 4 4 4M16 8l4 4-4 4M13 6l-2 12',
+  sigma: 'M18 5H6l6 7-6 7h12',
+  flask: 'M9 3h6M10 3v6L4.5 18.5A1.6 1.6 0 0 0 6 21h12a1.6 1.6 0 0 0 1.5-2.5L14 9V3M7 15h10',
+  heart: 'M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z',
+  chef: 'M7 14a4 4 0 1 1 1.5-7.7 4 4 0 0 1 7 0A4 4 0 1 1 17 14v6H7zM7 17h10',
+  coin: 'M12 7v10M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .9-3 2s1.3 1.8 3 2 3 .9 3 2-1.3 2-3 2c-1.4 0-2.6-.6-3-1.6',
+  chart: 'M4 20h16M7 16v-5M12 16V7M17 16v-8',
+  camera: 'M4 8h3l2-3h6l2 3h3v11H4z',
+  gamepad: 'M7 9h10a4 4 0 0 1 4 4v1a3 3 0 0 1-5.4 1.8L14.5 14h-5l-1.1 1.8A3 3 0 0 1 3 14v-1a4 4 0 0 1 4-4zM8 11v4M6 13h4M16 12v.01M18 14v.01',
+  sprout: 'M12 21v-9M12 12c0-4 3-6 7-6 0 4-3 6-7 6zM12 14c0-3-2.5-5-6-5 0 3 2.5 5 6 5z',
+  // actions
+  edit: 'M4 20h4L19 9l-4-4L4 16zM14 6l4 4',
+  download: 'M12 4v11M7 10l5 5 5-5M5 20h14',
+  link: 'M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1',
+  play: 'M8 5v14l11-7z',
+  up: 'M12 19V5M6 11l6-6 6 6',
+  down: 'M12 5v14M6 13l6 6 6-6',
+  copy: 'M9 9h11v11H9zM5 15H4V4h11v1',
 };
+export type IconName = keyof typeof P;
 
 export function Icon({ name, size = 18, stroke = 'currentColor' }: { name: keyof typeof P; size?: number; stroke?: string }) {
   return (
@@ -29,6 +52,8 @@ export function Icon({ name, size = 18, stroke = 'currentColor' }: { name: keyof
       {name === 'calendar' && <rect x="3" y="4" width="18" height="17" rx="2" />}
       {name === 'users' && <circle cx="9" cy="8" r="3.5" />}
       {name === 'lock' && <rect x="5" y="11" width="14" height="10" rx="2" />}
+      {name === 'coin' && <circle cx="12" cy="12" r="9" />}
+      {name === 'camera' && <circle cx="12" cy="13" r="3.5" />}
       {name === 'target' && <><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1" /></>}
       {P[name] && <path d={P[name]} />}
     </svg>

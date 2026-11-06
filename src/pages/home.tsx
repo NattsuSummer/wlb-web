@@ -4,6 +4,7 @@ import { Avatar, ErrorNote, Spinner, useCat } from '../components/ui';
 import { dayNames } from '../i18n';
 import { bangkokNow, dayRuns, fmtDuration, hh } from '../lib/schedule';
 import { useLoad, useTick } from '../lib/use-load';
+import { CatBox, Progress, useCourseCats } from '../components/course-ui';
 import { Link } from '../router';
 import { BalanceBars } from './schedule-parts';
 
@@ -11,6 +12,7 @@ export function HomePage() {
   const { me, t, lang } = useApp();
   const cat = useCat();
   useTick(30000);
+  const ccats = useCourseCats();
   const now = useLoad(() => get<{ me: MemberCard | null; others: MemberCard[] }>('/api/now'), []);
   const sched = useLoad(() => get<ScheduleView>(`/api/schedules/${me!.id}`), [me?.id]);
 
@@ -120,8 +122,21 @@ export function HomePage() {
         </section>
         <section aria-labelledby="learn-h" className="side card stack">
           <h2 id="learn-h">{t('home.learn')}</h2>
-          <span className="muted">{t('home.learnSoon')}</span>
-          <Link href="/courses" className="btn" style={{ alignSelf: 'flex-start' }}>{t('nav.courses')}</Link>
+          {now.data.me?.courses?.length ? (
+            <div className="stack" style={{ gap: 10 }}>
+              {now.data.me.courses.slice(0, 3).map((c) => (
+                <Link key={c.id} href={`/courses/${c.id}`} className="ccard" style={{ padding: 12 }}>
+                  <CatBox cat={ccats.byId.get(c.categoryId ?? -1)} size={36} />
+                  <span className="stack" style={{ gap: 4, flex: 1, minWidth: 0 }}>
+                    <span className="t" style={{ fontSize: 15 }}>{c.title}</span>
+                    <span className="s">{t('c.progress', { done: c.done, total: c.total })}</span>
+                    <Progress percent={c.percent} />
+                  </span>
+                </Link>
+              ))}
+            </div>
+          ) : <span className="muted">{t('home.learnNone')}</span>}
+          <Link href="/courses" className="btn ghost" style={{ alignSelf: 'flex-start' }}>{t('home.browse')}</Link>
         </section>
       </div>
     </>
