@@ -8,6 +8,7 @@ import { CoursePage } from './pages/course';
 import { EditCoursePage, ImportPage, NewCoursePage } from './pages/course-editor';
 import { CoursesPage } from './pages/courses';
 import { LessonPage } from './pages/lesson';
+import { ConsentPage } from './pages/oauth';
 import { HomePage } from './pages/home';
 import { ForcePasswordPage, LoginPage } from './pages/login';
 import { MembersPage } from './pages/members';
@@ -21,6 +22,7 @@ function App() {
   if (!ready) return <Spinner />;
   if (!me) return <LoginPage />;
   if (me.mustChangePassword) return <ForcePasswordPage />;
+  if (path === '/oauth/consent') return <ConsentPage />;
 
   const [, section, arg, sub] = path.split('/');
   const num = Number(arg);
