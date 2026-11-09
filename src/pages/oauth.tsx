@@ -62,7 +62,7 @@ export function ConsentPage() {
   );
 }
 
-export function McpSetup() {
+export function McpSetup({ example }: { example?: string } = {}) {
   const { t, toast } = useApp();
   const url = `${API_URL || location.origin}/mcp`;
   async function copy() {
@@ -84,6 +84,7 @@ export function McpSetup() {
         <li>{t('mcp.s3')}</li>
         <li>{t('mcp.s4')}</li>
       </ol>
+      {example && <p className="ink2" style={{ fontSize: 14 }}>{example}</p>}
       <p className="note info">{t('mcp.note')}</p>
     </div>
   );

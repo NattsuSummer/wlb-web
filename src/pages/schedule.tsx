@@ -6,6 +6,8 @@ import { dayNames } from '../i18n';
 import { bangkokNow, blockAt, hh, idx, inRange, normalize, plan, sameSlot, type Range } from '../lib/schedule';
 import { useLoad } from '../lib/use-load';
 import { BeforeAfter, SummaryCard } from './schedule-parts';
+import type { WeekLink } from '../lib/routines';
+import { Link } from '../router';
 
 interface Orig { d: number; from: number; to: number }
 
@@ -41,10 +43,14 @@ export function SchedulePage({ username }: { username?: string }) {
 }
 
 function Editor({ view, onChange }: { view: ScheduleView; onChange: (v: ScheduleView) => void }) {
-  const { t, lang, categories, toast } = useApp();
+  const { t, lang, categories, toast, me } = useApp();
   const cat = useCat();
   const week = view.week!;
   const uid = view.user.id;
+  const mine = uid === me?.id;
+  const rweek = useLoad(() => (mine ? get<{ links: WeekLink[] }>('/api/routines/week') : Promise.resolve({ links: [] as WeekLink[] })), [mine]);
+  const rlinks = rweek.data?.links ?? [];
+  const routinesAt = (d: number, h: number) => rlinks.filter((l) => l.weekday === d && l.hour === h);
   const editable = view.editable;
   const longDays = dayNames(lang, 'long');
   const shortDays = dayNames(lang, 'short');
@@ -161,10 +167,15 @@ function Editor({ view, onChange }: { view: ScheduleView; onChange: (v: Schedule
                 return (
                   <button key={d} type="button" disabled={!editable}
                     className={`cell${s ? '' : ' empty'}${sel ? ' sel' : isNow ? ' now' : ''}`}
-                    aria-label={`${longDays[d]} ${hh(h)} ${s ? `${cat.names(s.categoryIds)} ${s.description}` : t('sum.empty')}`}
+                    aria-label={`${longDays[d]} ${hh(h)} ${s ? `${cat.names(s.categoryIds)} ${s.description}` : t('sum.empty')}${routinesAt(d, h).map((l) => ` · ${l.plan.title}`).join('')}`}
                     onClick={() => pick(d, h)}
                     style={{ background: bg, color: cat.ink(s), borderRadius: `${start ? '6px 6px' : '0 0'} ${end ? '6px 6px' : '0 0'}` }}>
                     {start && s ? s.description || cat.names(s.categoryIds) : ''}
+                    {routinesAt(d, h).length > 0 && (
+                      <span className="rmark" aria-hidden="true" title={routinesAt(d, h).map((l) => l.plan.title).join(', ')}>
+                        <Icon name={routinesAt(d, h)[0]!.plan.kind === 'meal' ? 'bowl' : 'dumbbell'} size={11} />
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -182,6 +193,18 @@ function Editor({ view, onChange }: { view: ScheduleView; onChange: (v: Schedule
       </section>
 
       <div className="side stack" style={{ gap: 20 }}>
+        {mine && rlinks.length > 0 && (
+          <section aria-labelledby="rw-h" className="card stack" style={{ padding: 20, gap: 8 }}>
+            <h2 id="rw-h" style={{ fontSize: 17 }}>{t('r.myWeek')}</h2>
+            {rlinks.map((l, i) => (
+              <Link key={i} href={`/routines/plans/${l.plan.id}`} className="hstack" style={{ gap: 8, fontSize: 14, flexWrap: 'nowrap' }}>
+                <Icon name={l.plan.kind === 'meal' ? 'bowl' : 'dumbbell'} size={14} />
+                <span className="muted" style={{ minWidth: 92 }}>{shortDays[l.weekday]} {l.hour === null ? t('r.allDay') : hh(l.hour)}</span>
+                <span style={{ overflowWrap: 'anywhere' }}>{l.plan.title}</span>
+              </Link>
+            ))}
+          </section>
+        )}
         {editable && (
           <section aria-labelledby="edit-h" className="card stack" style={{ padding: 20 }}>
             <h2 id="edit-h" style={{ fontSize: 17 }}>{t('sched.edit')}</h2>

@@ -6,6 +6,8 @@ import { Spinner } from './components/ui';
 import { AdminPage } from './pages/admin';
 import { CoursePage } from './pages/course';
 import { EditCoursePage, ImportPage, NewCoursePage } from './pages/course-editor';
+import { EditRoutinePage, NewRoutinePage, RoutineImportPage } from './pages/routine-editor';
+import { RoutineItemPage, RoutinePlanPage, RoutinesPage } from './pages/routines';
 import { CoursesPage } from './pages/courses';
 import { LessonPage } from './pages/lesson';
 import { ConsentPage } from './pages/oauth';
@@ -38,6 +40,18 @@ function App() {
       else if (Number.isInteger(num) && sub === 'edit') page = <EditCoursePage key={num} id={num} />;
       else if (Number.isInteger(num) && !sub) page = <CoursePage key={num} id={num} />;
       break;
+    case 'routines': {
+      const n = Number(sub);
+      const edit = path.split('/')[4] === 'edit';
+      if (!arg) page = <RoutinesPage />;
+      else if (arg === 'import') page = <RoutineImportPage />;
+      else if (arg === 'new' && sub) page = <NewRoutinePage key={sub} what={sub} />;
+      else if ((arg === 'plans' || arg === 'items') && Number.isInteger(n) && n > 0) {
+        if (edit) page = <EditRoutinePage key={path} what={arg} id={n} />;
+        else if (!path.split('/')[4]) page = arg === 'plans' ? <RoutinePlanPage key={n} id={n} /> : <RoutineItemPage key={n} id={n} />;
+      }
+      break;
+    }
     case 'lessons': if (Number.isInteger(num)) page = <LessonPage id={num} />; break;
     case 'settings': page = <SettingsPage />; break;
     case 'admin': page = <AdminPage />; break;

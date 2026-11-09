@@ -260,7 +260,7 @@ export function issueText(msg: string, lang: string) {
   return msg;
 }
 
-function Checks({ check, checking, jsonError }: { check: Validation | null; checking: boolean; jsonError: string | null }) {
+export function Checks({ check, checking, jsonError }: { check: Validation | null; checking: boolean; jsonError: string | null }) {
   const { t, lang } = useApp();
   if (jsonError) return <div className="note err" role="alert">{t('e.badJson', { msg: jsonError })}</div>;
   if (!check) return <div className="note info">{t('e.checking')}</div>;
@@ -373,7 +373,7 @@ function CourseForm({ doc, onChange, packs, issues }: { doc: Doc; onChange: (d: 
   );
 }
 
-function Field({ label, error, children }: { label: string; error?: string; children: ReactNode }) {
+export function Field({ label, error, children }: { label: string; error?: string; children: ReactNode }) {
   const { lang } = useApp();
   const id = useId();
   const control = isValidElement(children)
