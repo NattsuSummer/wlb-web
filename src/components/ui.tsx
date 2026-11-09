@@ -41,6 +41,8 @@ const P: Record<string, string> = {
   up: 'M12 19V5M6 11l6-6 6 6',
   down: 'M12 5v14M6 13l6 6 6-6',
   copy: 'M9 9h11v11H9zM5 15H4V4h11v1',
+  dumbbell: 'M6 8v8M3 10v4M18 8v8M21 10v4M6 12h12',
+  bowl: 'M3 11h18a9 9 0 0 1-18 0zM8 7c0-1.5 1-2 1-3M12 7c0-1.5 1-2 1-3M16 7c0-1.5 1-2 1-3',
 };
 export type IconName = keyof typeof P;
 

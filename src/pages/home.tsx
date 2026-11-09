@@ -7,13 +7,15 @@ import { useLoad, useTick } from '../lib/use-load';
 import { CatBox, Progress, useCourseCats } from '../components/course-ui';
 import { Link } from '../router';
 import { BalanceBars } from './schedule-parts';
+import { KindBox } from './routines';
+import type { WeekLink } from '../lib/routines';
 
 export function HomePage() {
   const { me, t, lang } = useApp();
   const cat = useCat();
   useTick(30000);
   const ccats = useCourseCats();
-  const now = useLoad(() => get<{ me: MemberCard | null; others: MemberCard[] }>('/api/now'), []);
+  const now = useLoad(() => get<{ me: MemberCard | null; others: MemberCard[]; routinesToday?: WeekLink[] }>('/api/now'), []);
   const sched = useLoad(() => get<ScheduleView>(`/api/schedules/${me!.id}`), [me?.id]);
 
   if (now.error) return <ErrorNote error={now.error} onRetry={now.reload} />;
@@ -139,6 +141,28 @@ export function HomePage() {
           <Link href="/courses" className="btn ghost" style={{ alignSelf: 'flex-start' }}>{t('home.browse')}</Link>
         </section>
       </div>
+
+      <section aria-labelledby="rt-h" className="card stack">
+        <h2 id="rt-h">{t('r.today')}</h2>
+        {now.data.routinesToday?.length ? (
+          <div className="course-grid">
+            {[...now.data.routinesToday].sort((a, b) => (a.hour ?? -1) - (b.hour ?? -1)).map((l, i) => (
+              <Link key={i} href={`/routines/plans/${l.plan.id}`} className="ccard" style={{ padding: 12 }}>
+                <KindBox kind={l.plan.kind} size={36} />
+                <span className="stack" style={{ gap: 4, flex: 1, minWidth: 0 }}>
+                  <span className="t" style={{ fontSize: 15 }}>{l.plan.title}</span>
+                  <span className="s">
+                    {l.hour === null ? t('r.allDay') : hh(l.hour)}
+                    {l.plan.kind === 'meal' ? ` · ${l.plan.calories ?? 0} kcal` : ` · ${t('r.minutes', { n: l.plan.minutes ?? 0 })}`}
+                    {l.hour === bkk.hour && <> · <strong style={{ color: 'var(--accent)' }}>{t('r.now')}</strong></>}
+                  </span>
+                </span>
+              </Link>
+            ))}
+          </div>
+        ) : <span className="muted">{t('r.todayNone')}</span>}
+        <Link href="/routines" className="btn ghost" style={{ alignSelf: 'flex-start' }}>{t('r.browse')}</Link>
+      </section>
     </>
   );
 }
