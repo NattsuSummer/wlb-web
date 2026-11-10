@@ -149,7 +149,17 @@ function ItemEditor({ initial, id }: { initial: Doc; id?: number }) {
               <textarea className="input" rows={5} value={(doc.ingredients ?? []).join('\n')} onChange={(e) => set('ingredients', e.target.value.split('\n'))}
                 onBlur={() => set('ingredients', (doc.ingredients ?? []).map((s: string) => s.trim()).filter(Boolean))} />
             </Field>
-            <Field label={t('re.steps')} error={err('steps')}><textarea className="input" rows={8} value={doc.steps ?? ''} onChange={(e) => set('steps', e.target.value)} /></Field>
+            <div className="form-grid3">
+              <Field label={t('re.prep')} error={err('prepMinutes')}><input className="input" inputMode="numeric" value={numStr(doc.prepMinutes)} onChange={(e) => set('prepMinutes', numOrNull(e.target.value))} /></Field>
+              <Field label={t('re.cook')} error={err('cookMinutes')}><input className="input" inputMode="numeric" value={numStr(doc.cookMinutes)} onChange={(e) => set('cookMinutes', numOrNull(e.target.value))} /></Field>
+              <Field label={t('re.makes')} error={err('makes')}><input className="input" inputMode="numeric" placeholder="1" value={numStr(doc.makes)} onChange={(e) => set('makes', numOrNull(e.target.value))} /></Field>
+            </div>
+            <Field label={t('re.tools')}>
+              <input className="input" value={(doc.tools ?? []).join(', ')} onChange={(e) => set('tools', e.target.value.split(',').map((x) => x.trimStart()))}
+                onBlur={() => set('tools', (doc.tools ?? []).map((x: string) => x.trim()).filter(Boolean))} />
+            </Field>
+            <Field label={t('re.steps')} error={err('steps')}><textarea className="input" rows={8} placeholder={'1. …\n2. …'} value={doc.steps ?? ''} onChange={(e) => set('steps', e.target.value)} /></Field>
+            <Field label={t('re.tips')} error={err('tips')}><textarea className="input" rows={3} value={doc.tips ?? ''} onChange={(e) => set('tips', e.target.value)} /></Field>
           </>
         )}
         <Field label={t('f.links')}>
