@@ -43,6 +43,7 @@ const P: Record<string, string> = {
   copy: 'M9 9h11v11H9zM5 15H4V4h11v1',
   dumbbell: 'M6 8v8M3 10v4M18 8v8M21 10v4M6 12h12',
   bowl: 'M3 11h18a9 9 0 0 1-18 0zM8 7c0-1.5 1-2 1-3M12 7c0-1.5 1-2 1-3M16 7c0-1.5 1-2 1-3',
+  scale: 'M4 4h16v16H4zM8 9a6 6 0 0 1 8 0l-2.5 2.5M12 11.5l1.5-2.5',
 };
 export type IconName = keyof typeof P;
 

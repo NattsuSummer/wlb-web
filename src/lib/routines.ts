@@ -10,7 +10,10 @@ export const sectionsFor = (k: PlanKind): readonly string[] => (k === 'workout' 
 export const itemKindFor = (k: PlanKind): ItemKind => (k === 'workout' ? 'exercise' : 'meal');
 
 export interface ExerciseData { muscles: string[]; equipment: string; sets: number | null; reps: string | null; seconds: number | null }
-export interface MealData { mealTypes: string[]; ingredients: string[]; servingNote: string; calories: number | null; protein: number | null; carbs: number | null; fat: number | null }
+export interface MealData {
+  mealTypes: string[]; ingredients: string[]; servingNote: string; calories: number | null; protein: number | null; carbs: number | null; fat: number | null;
+  prepMinutes?: number | null; cookMinutes?: number | null; makes?: number | null; tools?: string[]; tips?: string;
+}
 
 export interface RoutineItem {
   id: number; kind: ItemKind; title: string; description: string; bodyMd?: string; data: ExerciseData & MealData;

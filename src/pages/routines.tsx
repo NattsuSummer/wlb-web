@@ -12,8 +12,10 @@ import {
 import { useLoad } from '../lib/use-load';
 import { Link, navigate } from '../router';
 import { downloadJson } from './course';
+import { BodyPanel } from './body';
 
-const tabFromUrl = (): PlanKind => (new URLSearchParams(location.search).get('tab') === 'meal' ? 'meal' : 'workout');
+type Tab = PlanKind | 'body';
+const tabFromUrl = (): Tab => { const v = new URLSearchParams(location.search).get('tab'); return v === 'meal' || v === 'body' ? v : 'workout'; };
 
 export function KindBox({ kind, size = 44 }: { kind: ItemKind | PlanKind; size?: number }) {
   const c = tintColors(kind === 'meal' ? 'f' : 'w');
@@ -113,17 +115,37 @@ function ItemCard({ it }: { it: RoutineItem }) {
 
 export function RoutinesPage() {
   const { t, lang } = useApp();
-  const [kind, setKind] = useState<PlanKind>(tabFromUrl);
+  const [tab, setTab] = useState<Tab>(tabFromUrl);
+  const kind: PlanKind = tab === 'body' ? 'workout' : tab;
   const [filter, setFilter] = useState<string>('all');
   const r = useLoad(() => get<RoutineList>('/api/routines'), []);
   const week = useLoad(() => get<{ links: WeekLink[] }>('/api/routines/week'), []);
   const long = dayNames(lang, 'long');
 
-  function choose(k: PlanKind) {
-    setKind(k);
+  function choose(k: Tab) {
+    setTab(k);
     setFilter('all');
-    history.replaceState(null, '', k === 'meal' ? '/routines?tab=meal' : '/routines');
+    history.replaceState(null, '', k === 'workout' ? '/routines' : `/routines?tab=${k}`);
   }
+  const tabs = (
+    <div className="seg" role="tablist" aria-label={t('r.title')} style={{ alignSelf: 'flex-start' }}>
+      {(['workout', 'meal', 'body'] as const).map((k) => (
+        <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => choose(k)}>
+          <Icon name={k === 'meal' ? 'bowl' : k === 'body' ? 'scale' : 'dumbbell'} size={16} /> {t(`r.tab.${k}`)}
+        </button>
+      ))}
+    </div>
+  );
+  const header = (
+    <div className="between">
+      <div className="stack" style={{ gap: 4 }}>
+        <h1>{t('r.title')}</h1>
+        <p className="muted" style={{ fontSize: 14 }}>{t('r.sub')}</p>
+      </div>
+      {tab !== 'body' && <AddMenu kind={kind} />}
+    </div>
+  );
+  if (tab === 'body') return <>{header}{tabs}<BodyPanel /></>;
 
   if (r.error) return <ErrorNote error={r.error} onRetry={r.reload} />;
   if (!r.data) return <Spinner />;
@@ -136,21 +158,8 @@ export function RoutinesPage() {
 
   return (
     <>
-      <div className="between">
-        <div className="stack" style={{ gap: 4 }}>
-          <h1>{t('r.title')}</h1>
-          <p className="muted" style={{ fontSize: 14 }}>{t('r.sub')}</p>
-        </div>
-        <AddMenu kind={kind} />
-      </div>
-
-      <div className="seg" role="tablist" aria-label={t('r.title')} style={{ alignSelf: 'flex-start' }}>
-        {(['workout', 'meal'] as const).map((k) => (
-          <button key={k} type="button" role="tab" aria-selected={kind === k} onClick={() => choose(k)}>
-            <Icon name={k === 'meal' ? 'bowl' : 'dumbbell'} size={16} /> {t(`r.tab.${k}`)}
-          </button>
-        ))}
-      </div>
+      {header}
+      {tabs}
 
       <section className="card stack" aria-labelledby="week-h">
         <h2 id="week-h">{t('r.myWeek')}</h2>
@@ -293,6 +302,8 @@ function entryDetail(e: PlanDetail['entries'][number], t: (k: Key, v?: Record<st
     const k = e.servings ?? 1;
     if (k !== 1) out.push(t('r.servings', { n: fmtNum(k) }));
     if (e.item.data.calories !== null) out.push(`${Math.round(e.item.data.calories * k)} kcal`);
+    const mins = (e.item.data.prepMinutes ?? 0) + (e.item.data.cookMinutes ?? 0);
+    if (mins) out.push(`⏱ ${t('r.minutesShort', { n: mins })}`);
     if (e.item.data.protein !== null) out.push(`P ${fmtNum(e.item.data.protein * k)} g`);
   }
   return out.join(' · ');
@@ -386,6 +397,35 @@ export function RoutinePlanPage({ id }: { id: number }) {
 }
 
 // ---------- item page ----------
+function Ingredients({ d }: { d: RoutineItem['data'] }) {
+  const { t } = useApp();
+  const [done, setDone] = useState<Set<number>>(new Set());
+  return (
+    <section className="card stack" aria-labelledby="ing-h">
+      <div className="between">
+        <h2 id="ing-h">{t('r.ingredients')}</h2>
+        {d.makes != null && d.makes !== 1 && <span className="muted" style={{ fontSize: 13 }}>{t('r.makes', { n: d.makes })}</span>}
+      </div>
+      <ul className="checklist">
+        {d.ingredients.map((x, i) => (
+          <li key={i}>
+            <label className={done.has(i) ? 'done' : undefined}>
+              <input type="checkbox" checked={done.has(i)} onChange={() => { const n = new Set(done); if (n.has(i)) n.delete(i); else n.add(i); setDone(n); }} />
+              <span>{x}</span>
+            </label>
+          </li>
+        ))}
+      </ul>
+      {(d.tools?.length ?? 0) > 0 && (
+        <div className="hstack" style={{ gap: 6 }}>
+          <span className="muted" style={{ fontSize: 13 }}>{t('r.tools')}:</span>
+          {d.tools!.map((x) => <span key={x} className="chip gray">{x}</span>)}
+        </div>
+      )}
+    </section>
+  );
+}
+
 export function RoutineItemPage({ id }: { id: number }) {
   const { t } = useApp();
   const r = useLoad(() => get<{ item: RoutineItem; usedIn: { id: number; title: string; kind: PlanKind }[] }>(`/api/routines/items/${id}`), [id]);
@@ -423,7 +463,15 @@ export function RoutineItemPage({ id }: { id: number }) {
                     <span className="chip gray">{t('r.suggested')}: {[d.sets && t('r.sets', { n: d.sets }), d.reps && t('r.reps', { n: d.reps }), d.seconds && t('r.seconds', { n: d.seconds })].filter(Boolean).join(' · ')}</span>
                   )}
                 </>
-              ) : d.mealTypes?.map((m) => <span key={m} className="chip gray">{t(`r.meal.${m}` as Key)}</span>)}
+              ) : (
+                <>
+                  {d.mealTypes?.map((m) => <span key={m} className="chip gray">{t(`r.meal.${m}` as Key)}</span>)}
+                  {d.prepMinutes != null && <span className="chip gray">{t('r.prep', { n: d.prepMinutes })}</span>}
+                  {d.cookMinutes != null && <span className="chip gray">{t('r.cook', { n: d.cookMinutes })}</span>}
+                  {d.prepMinutes != null && d.cookMinutes != null && <span className="chip gray"><strong>{t('r.totalTime', { n: d.prepMinutes + d.cookMinutes })}</strong></span>}
+                  {d.makes != null && d.makes !== 1 && <span className="chip gray">{t('r.makes', { n: d.makes })}</span>}
+                </>
+              )}
             </div>
             {it.status === 'draft' && <div className="note warn">{t('r.draftNote')}</div>}
             <OwnerActions what="items" id={it.id} title={it.title} status={it.status} visibility={it.visibility} canEdit={it.canEdit} onChanged={r.reload} />
@@ -435,16 +483,17 @@ export function RoutineItemPage({ id }: { id: number }) {
           {videos.map((l, i) => (
             <div key={i} className="video"><iframe src={`https://www.youtube-nocookie.com/embed/${youtubeId(l.url)}`} title={l.title} loading="lazy" allow="encrypted-media; picture-in-picture" allowFullScreen /></div>
           ))}
-          {it.kind === 'meal' && d.ingredients?.length > 0 && (
-            <section className="card stack" aria-labelledby="ing-h">
-              <h2 id="ing-h">{t('r.ingredients')}</h2>
-              <ul style={{ margin: 0, paddingLeft: 20 }}>{d.ingredients.map((x, i) => <li key={i}>{x}</li>)}</ul>
-            </section>
-          )}
+          {it.kind === 'meal' && (d.ingredients?.length > 0 || (d.tools?.length ?? 0) > 0) && <Ingredients d={d} />}
           {it.bodyMd && (
             <section className="card stack" aria-labelledby="how-h">
               <h2 id="how-h">{t(it.kind === 'meal' ? 'r.howCook' : 'r.howTo')}</h2>
               <div className="md" dangerouslySetInnerHTML={{ __html: renderMarkdown(it.bodyMd) }} />
+            </section>
+          )}
+          {it.kind === 'meal' && d.tips && (
+            <section className="card stack" aria-labelledby="tips-h">
+              <h2 id="tips-h">{t('r.tips')}</h2>
+              <div className="md" dangerouslySetInnerHTML={{ __html: renderMarkdown(d.tips) }} />
             </section>
           )}
           {it.links.length > 0 && (

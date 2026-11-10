@@ -1,6 +1,6 @@
 import { get, type MemberCard, type ScheduleView } from '../api';
 import { useApp } from '../app-context';
-import { Avatar, ErrorNote, Spinner, useCat } from '../components/ui';
+import { Avatar, ErrorNote, Icon, Spinner, useCat } from '../components/ui';
 import { dayNames } from '../i18n';
 import { bangkokNow, dayRuns, fmtDuration, hh } from '../lib/schedule';
 import { useLoad, useTick } from '../lib/use-load';
@@ -15,7 +15,7 @@ export function HomePage() {
   const cat = useCat();
   useTick(30000);
   const ccats = useCourseCats();
-  const now = useLoad(() => get<{ me: MemberCard | null; others: MemberCard[]; routinesToday?: WeekLink[] }>('/api/now'), []);
+  const now = useLoad(() => get<{ me: MemberCard | null; others: MemberCard[]; routinesToday?: WeekLink[]; bodyCheck?: { due: boolean; lastDate: string | null; daysSinceLast: number | null; weightKg: number | null } }>('/api/now'), []);
   const sched = useLoad(() => get<ScheduleView>(`/api/schedules/${me!.id}`), [me?.id]);
 
   if (now.error) return <ErrorNote error={now.error} onRetry={now.reload} />;
@@ -141,6 +141,17 @@ export function HomePage() {
           <Link href="/courses" className="btn ghost" style={{ alignSelf: 'flex-start' }}>{t('home.browse')}</Link>
         </section>
       </div>
+
+      {now.data.bodyCheck && (now.data.bodyCheck.due ? (
+        <div className="note warn between" role="status">
+          <span><Icon name="scale" size={16} /> <strong>{t(now.data.bodyCheck.lastDate ? 'b.due' : 'b.dueFirst')}</strong></span>
+          <Link href="/routines?tab=body" className="btn small">{t('b.recordNow')}</Link>
+        </div>
+      ) : now.data.bodyCheck.weightKg !== null && (
+        <Link href="/routines?tab=body" className="hstack muted" style={{ gap: 8, fontSize: 14, alignSelf: 'flex-start' }}>
+          <Icon name="scale" size={16} /> {t('b.homeTitle')} · {t('b.homeLatest', { w: now.data.bodyCheck.weightKg, n: now.data.bodyCheck.daysSinceLast ?? 0 })}
+        </Link>
+      ))}
 
       <section aria-labelledby="rt-h" className="card stack">
         <h2 id="rt-h">{t('r.today')}</h2>
