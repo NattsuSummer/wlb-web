@@ -6,6 +6,8 @@ import { Spinner } from './components/ui';
 import { AdminPage } from './pages/admin';
 import { CoursePage } from './pages/course';
 import { EditCoursePage, ImportPage, NewCoursePage } from './pages/course-editor';
+import { ProjectsPage } from './pages/projects';
+import { ProjectPage } from './pages/project';
 import { EditRoutinePage, NewRoutinePage, RoutineImportPage } from './pages/routine-editor';
 import { RoutineItemPage, RoutinePlanPage, RoutinesPage } from './pages/routines';
 import { CoursesPage } from './pages/courses';
@@ -40,6 +42,12 @@ function App() {
       else if (Number.isInteger(num) && sub === 'edit') page = <EditCoursePage key={num} id={num} />;
       else if (Number.isInteger(num) && !sub) page = <CoursePage key={num} id={num} />;
       break;
+    case 'projects': {
+      const n = Number(arg);
+      if (!arg) page = <ProjectsPage />;
+      else if (Number.isInteger(n) && n > 0 && !sub) page = <ProjectPage key={n} id={n} />;
+      break;
+    }
     case 'routines': {
       const n = Number(sub);
       const edit = path.split('/')[4] === 'edit';

@@ -29,6 +29,7 @@ const NAV = [
   { href: '/members', key: 'nav.members', icon: 'users' },
   { href: '/courses', key: 'nav.courses', icon: 'book' },
   { href: '/routines', key: 'nav.routines', icon: 'dumbbell' },
+  { href: '/projects', key: 'nav.projects', icon: 'gamepad' },
 ] as const;
 
 export function Layout({ path, children }: { path: string; children: ReactNode }) {

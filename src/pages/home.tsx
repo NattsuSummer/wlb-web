@@ -15,7 +15,7 @@ export function HomePage() {
   const cat = useCat();
   useTick(30000);
   const ccats = useCourseCats();
-  const now = useLoad(() => get<{ me: MemberCard | null; others: MemberCard[]; routinesToday?: WeekLink[]; bodyCheck?: { due: boolean; lastDate: string | null; daysSinceLast: number | null; weightKg: number | null } }>('/api/now'), []);
+  const now = useLoad(() => get<{ me: MemberCard | null; others: MemberCard[]; routinesToday?: WeekLink[]; projectsToday?: { id: number; name: string; dailyDone: boolean; sprintNo: number }[]; bodyCheck?: { due: boolean; lastDate: string | null; daysSinceLast: number | null; weightKg: number | null } }>('/api/now'), []);
   const sched = useLoad(() => get<ScheduleView>(`/api/schedules/${me!.id}`), [me?.id]);
 
   if (now.error) return <ErrorNote error={now.error} onRetry={now.reload} />;
@@ -142,6 +142,12 @@ export function HomePage() {
         </section>
       </div>
 
+      {now.data.projectsToday?.filter((p) => !p.dailyDone).map((p) => (
+        <div key={p.id} className="note info between" role="status">
+          <span><Icon name="gamepad" size={16} /> <strong>{t('p.homeDaily', { name: p.name })}</strong></span>
+          <Link href={`/projects/${p.id}`} className="btn small">{t('p.homeDailyBtn')}</Link>
+        </div>
+      ))}
       {now.data.bodyCheck && (now.data.bodyCheck.due ? (
         <div className="note warn between" role="status">
           <span><Icon name="scale" size={16} /> <strong>{t(now.data.bodyCheck.lastDate ? 'b.due' : 'b.dueFirst')}</strong></span>
